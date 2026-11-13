@@ -1,4 +1,4 @@
-export interface SeriesChapter {
+interface SeriesChapter {
     id: string;
     title: string;
     available: boolean;
@@ -28,6 +28,7 @@ export interface SeriesDetail {
         latestNovelId: string;
         xRestrict: number;
         isOriginal: boolean;
+        total: number;
         cover: {
             urls: {
                 original: string;
@@ -64,5 +65,30 @@ export interface SeriesFeed {
         pubDate?: Date;
         author?: string;
         category?: string[];
+    }>;
+}
+
+interface AppUser {
+    id: number;
+    name: string;
+}
+
+interface AppNovelSeriesDetail {
+    id: string;
+    title: string;
+    caption: string;
+    content_count: number;
+    is_concluded: boolean;
+    is_original: boolean;
+    user: AppUser;
+}
+
+export interface AppNovelSeries {
+    novel_series_detail: AppNovelSeriesDetail;
+    novels: Array<{
+        id: string;
+        title: string;
+        create_date: Date;
+        user: AppUser;
     }>;
 }

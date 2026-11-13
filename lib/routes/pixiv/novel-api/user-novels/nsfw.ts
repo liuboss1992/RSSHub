@@ -1,16 +1,17 @@
-import got from '../../pixiv-got';
-import { maskHeader } from '../../constants';
 import queryString from 'query-string';
+
 import { config } from '@/config';
+import ConfigNotFoundError from '@/errors/types/config-not-found';
+import InvalidParameterError from '@/errors/types/invalid-parameter';
+import { parseDate } from '@/utils/parse-date';
+
+import { maskHeader } from '../../constants';
+import got from '../../pixiv-got';
+import { getToken } from '../../token';
 import pixivUtils from '../../utils';
 import { getNSFWNovelContent } from '../content/nsfw';
-import { parseDate } from '@/utils/parse-date';
 import { convertPixivProtocolExtended } from '../content/utils';
-import type { NSFWNovelsResponse, NovelList } from './types';
-import ConfigNotFoundError from '@/errors/types/config-not-found';
-import cache from '@/utils/cache';
-import { getToken } from '../../token';
-import InvalidParameterError from '@/errors/types/invalid-parameter';
+import type { NovelList, NSFWNovelsResponse } from './types';
 
 function getNovels(user_id: string, token: string): Promise<NSFWNovelsResponse> {
     return got('https://app-api.pixiv.net/v1/user/novels', {
@@ -30,7 +31,7 @@ export async function getNSFWUserNovels(id: string, fullContent: boolean = false
         throw new ConfigNotFoundError('This user is an R18 creator, PIXIV_REFRESHTOKEN is required.\npixiv RSS is disabled due to the lack of relevant config.\n該用戶爲 R18 創作者，需要 PIXIV_REFRESHTOKEN。');
     }
 
-    const token = await getToken(cache.tryGet);
+    const token = await getToken();
     if (!token) {
         throw new ConfigNotFoundError('pixiv not login');
     }
@@ -50,13 +51,9 @@ export async function getNSFWUserNovels(id: string, fullContent: boolean = false
                 title: novel.series?.title ? `${novel.series.title} - ${novel.title}` : novel.title,
                 description: `
                     <img src="${pixivUtils.getProxiedImageUrl(novel.image_urls.large)}" />
+                    <div>
                     <p>${convertPixivProtocolExtended(novel.caption)}</p>
-                    <p>
-                    字數：${novel.text_length}<br>
-                    閱覽數：${novel.total_view}<br>
-                    收藏數：${novel.total_bookmarks}<br>
-                    評論數：${novel.total_comments}<br>
-                    </p>`,
+                    </div>`,
                 author: novel.user.name,
                 pubDate: parseDate(novel.create_date),
                 link: `https://www.pixiv.net/novel/show.php?id=${novel.id}`,
